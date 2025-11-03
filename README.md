@@ -5,29 +5,29 @@ This repository houses the most recent stable versions of the Lua language and c
 We aim to create Lua interpreters that are optimized, compact and can run on most Lua supported platforms.
 
 So far we support:
-- Linux x64 (x86 64-bit) - filename pattern `luaVV-linux-x64`
-- Windows x64 (x86 64-bit) - filename pattern `luaVV-windows-x64.exe`
+- Linux x64 (x86 64-bit) - filename pattern `luaVV`
+- Windows x64 (x86 64-bit) - filename pattern `luaVV.exe`
 - macOS x64 (x86 64-bit) - filename pattern `luaVV-macos-x64`
 ## Download
 
 Direct download to our released binaries is possible using the following links:
 
 **Linux:**
-- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51-linux-x64
-- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53-linux-x64
-- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54-linux-x64
+- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51
+- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53
+- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54
 
 **Windows:**
-- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51-windows-x64.exe
-- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53-windows-x64.exe
-- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54-windows-x64.exe
+- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51.exe
+- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53.exe
+- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54.exe
 
 **macOS:**
 - lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51-macos-x64
 - lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53-macos-x64
 - lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54-macos-x64
 
-Lua bytecode compilers are available by replacing `lua` with `luac` in the filename (e.g., `luac51-linux-x64`).
+Lua bytecode compilers are available by replacing `lua` with `luac` in the filename (e.g., `luac51`, `luac51.exe`, `luac51-macos-x64`).
 
 Releases are tagged with the GitHub hash and listed in the [Release page](https://github.com/dyne/luabinaries/releases/).
 
