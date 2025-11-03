@@ -1,11 +1,11 @@
 # mdformat configuration
 # https://mdformat.readthedocs.io/en/stable/users/configuration_file.html
 
-# Wrap text to this width (0 = no wrapping)
-wrap = 0
+# Wrap text ("keep" = no wrapping, or number for column width)
+wrap = "keep"
 
 # Normalize numbered lists (true = use 1. 2. 3., false = keep as-is)
-number = false
+number = true
 
 # Line ending style
 end_of_line = "lf"
