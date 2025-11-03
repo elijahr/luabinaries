@@ -69,9 +69,6 @@ jobs:
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: build macOS binaries
         run: make macos
-      - name: compress all binaries
-        run: |
-          upx build/macos/*
       - name: calculate SHA sums
         run: |
            shasum -a 256 build/macos/* > build/SHA256SUMS-macos-x64.txt
