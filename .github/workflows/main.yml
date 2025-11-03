@@ -3,13 +3,9 @@ on:
   push:
     paths-ignore:
       - '*.md'
-    branches:
-      - main
   pull_request:
     paths-ignore:
       - '*.md'
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -253,7 +249,25 @@ jobs:
     name: 📦 Pack
     needs: [linux-build, windows-build, macos-build]
     runs-on: ubuntu-latest
+    # Only create releases for pushes (not PRs)
+    if: github.event_name == 'push'
     steps:
+      - name: Get branch name
+        id: branch
+        run: |
+          # Extract branch name from ref
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          # Sanitize branch name for tag (replace / with -)
+          SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "safe_name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          # Determine if this is main branch
+          if [ "$BRANCH_NAME" = "main" ]; then
+            echo "is_main=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_main=false" >> $GITHUB_OUTPUT
+          fi
       - name: download binary artifacts
         uses: actions/download-artifact@v5
         with:
@@ -273,7 +287,8 @@ jobs:
             release/windows-x64/*
             release/macos-x64/*
             release/macos-arm64/*
-          tag_name: ${{ needs.linux-build.outputs.git_sha_short }}
+          tag_name: ${{ steps.branch.outputs.safe_name }}-${{ needs.linux-build.outputs.git_sha_short }}
+          name: ${{ steps.branch.outputs.name }} (${{ needs.linux-build.outputs.git_sha_short }})
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.branch.outputs.is_main == 'false' }}
           generate_release_notes: true

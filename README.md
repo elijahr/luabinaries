@@ -156,7 +156,18 @@ The released binaries are compressed to ~50% of their original size using [upx-u
 
 ## CI/CD
 
-GitHub Actions automatically builds binaries using a matrix strategy:
+GitHub Actions automatically builds and tests binaries for all branches and pull requests.
+
+**Workflow Triggers:**
+
+- **All branches**: Build, test, and create releases on every push (except markdown-only changes)
+  - **Main branch**: Creates standard releases tagged as `main-<short-sha>`
+  - **Other branches**: Creates prerelease builds tagged as `<branch-name>-<short-sha>`
+- **Pull requests**: Build and test only (no releases created)
+
+This allows you to test binaries from any branch before merging to main!
+
+GitHub Actions builds binaries using a matrix strategy:
 
 **Linux Builds** (Native runners):
 
