@@ -4,32 +4,44 @@ This repository houses the most recent stable versions of the Lua language and c
 
 We aim to create Lua interpreters that are optimized, compact and can run on most Lua supported platforms.
 
-So far we support:
-- Linux x64 (x86 64-bit) - filename pattern `luaVV`
-- Windows x64 (x86 64-bit) - filename pattern `luaVV.exe`
-- macOS x64 (x86 64-bit) - filename pattern `luaVV-macos-x64`
+## Supported Platforms
+
+Each platform provides both the Lua interpreter and the Lua bytecode compiler (luac).
+
+| Platform | Architecture | Interpreter | Compiler | Notes |
+|----------|--------------|-------------|----------|-------|
+| Linux | x64 | `luaVV` | `luacVV` | Static binaries built with musl |
+| Windows | x64 | `luaVV.exe` | `luacVV.exe` | Cross-compiled with MinGW |
+| macOS | x64 | `luaVV-macos-x64` | `luacVV-macos-x64` | Native builds with Clang |
+
+*VV = Lua version (51, 53, or 54)*
 ## Download
 
-Direct download to our released binaries is possible using the following links:
+Download the latest binaries from the [Releases page](https://github.com/dyne/luabinaries/releases/latest), or use direct links below:
 
-**Linux:**
-- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51
-- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53
-- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54
+### Linux
 
-**Windows:**
-- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51.exe
-- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53.exe
-- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54.exe
+| Lua Version | Interpreter | Compiler |
+|-------------|-------------|----------|
+| 5.1 | [lua51](https://github.com/dyne/luabinaries/releases/latest/download/lua51) | [luac51](https://github.com/dyne/luabinaries/releases/latest/download/luac51) |
+| 5.3 | [lua53](https://github.com/dyne/luabinaries/releases/latest/download/lua53) | [luac53](https://github.com/dyne/luabinaries/releases/latest/download/luac53) |
+| 5.4 | [lua54](https://github.com/dyne/luabinaries/releases/latest/download/lua54) | [luac54](https://github.com/dyne/luabinaries/releases/latest/download/luac54) |
 
-**macOS:**
-- lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51-macos-x64
-- lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53-macos-x64
-- lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54-macos-x64
+### Windows
 
-Lua bytecode compilers are available by replacing `lua` with `luac` in the filename (e.g., `luac51`, `luac51.exe`, `luac51-macos-x64`).
+| Lua Version | Interpreter | Compiler |
+|-------------|-------------|----------|
+| 5.1 | [lua51.exe](https://github.com/dyne/luabinaries/releases/latest/download/lua51.exe) | [luac51.exe](https://github.com/dyne/luabinaries/releases/latest/download/luac51.exe) |
+| 5.3 | [lua53.exe](https://github.com/dyne/luabinaries/releases/latest/download/lua53.exe) | [luac53.exe](https://github.com/dyne/luabinaries/releases/latest/download/luac53.exe) |
+| 5.4 | [lua54.exe](https://github.com/dyne/luabinaries/releases/latest/download/lua54.exe) | [luac54.exe](https://github.com/dyne/luabinaries/releases/latest/download/luac54.exe) |
 
-Releases are tagged with the GitHub hash and listed in the [Release page](https://github.com/dyne/luabinaries/releases/).
+### macOS
+
+| Lua Version | Interpreter | Compiler |
+|-------------|-------------|----------|
+| 5.1 | [lua51-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/lua51-macos-x64) | [luac51-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/luac51-macos-x64) |
+| 5.3 | [lua53-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/lua53-macos-x64) | [luac53-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/luac53-macos-x64) |
+| 5.4 | [lua54-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/lua54-macos-x64) | [luac54-macos-x64](https://github.com/dyne/luabinaries/releases/latest/download/luac54-macos-x64) |
 
 ## Building
 
