@@ -1,4 +1,27 @@
-# HASHES: https://www.lua.org/ftp/
+# Dynamic Lua Build System
+# ========================
+#
+# This Makefile automatically discovers and builds all Lua versions found in the repository.
+#
+# How it works:
+# 1. Scans for all lua-*.tar.gz files in the repository root
+# 2. Extracts version numbers (e.g., lua-5.4.8.tar.gz → 5.4.8)
+# 3. Generates build targets automatically (e.g., lua54, lua54-windows, lua54-macos)
+# 4. No hardcoded versions - fully extensible
+#
+# Adding new Lua versions:
+# - Simply add lua-X.Y.Z.tar.gz to the repository
+# - The Makefile will automatically create build targets for it
+# - No Makefile changes needed!
+#
+# Available targets:
+# - make           : Build all platforms (Linux, Windows, macOS)
+# - make linux     : Build Linux binaries only
+# - make windows   : Build Windows binaries only
+# - make macos     : Build macOS binaries only
+# - make clean     : Remove all build artifacts
+#
+# Lua source archives and hashes: https://www.lua.org/ftp/
 
 # Discover all Lua tarballs in the repository
 LUA_TARBALLS := $(wildcard lua-*.tar.gz)

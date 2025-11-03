@@ -34,7 +34,15 @@ Releases are tagged with the GitHub hash and listed in the [Release page](https:
 
 ## Building
 
-The [Makefile](https://github.com/dyne/luabinaries/blob/main/Makefile) does everything needed using the original Lua source-code releases archived in this repository.
+The [Makefile](https://github.com/dyne/luabinaries/blob/main/Makefile) automatically discovers and builds all Lua versions found in the repository. It scans for `lua-*.tar.gz` files and dynamically generates build targets - no hardcoded versions needed!
+
+### How It Works
+
+The Makefile:
+1. **Auto-discovers** all Lua tarballs in the repository root
+2. **Generates build targets** automatically (e.g., `lua-5.4.8.tar.gz` → `lua54` target)
+3. **Builds for multiple platforms** - Linux, Windows, macOS
+4. **No manual updates needed** - just add new tarballs and build!
 
 ### Linux and Windows Builds
 
@@ -59,10 +67,20 @@ To build macOS binaries on a macOS system:
 make macos    # Build macOS binaries
 ```
 
+### Output Structure
+
 The builds create optimized binaries in the `build/` directory organized by platform:
-- `build/linux/` - Linux amd64 binaries
-- `build/win64/` - Windows amd64 binaries
-- `build/macos/` - macOS amd64 binaries
+- `build/linux/` - Linux amd64 binaries (e.g., `lua51`, `lua53`, `lua54`)
+- `build/win64/` - Windows amd64 binaries (e.g., `lua51.exe`, `lua53.exe`, `lua54.exe`)
+- `build/macos/` - macOS amd64 binaries (e.g., `lua51`, `lua53`, `lua54`)
+
+### Adding New Lua Versions
+
+To add support for a new Lua version:
+1. Download the tarball: `curl -O https://www.lua.org/ftp/lua-X.Y.Z.tar.gz`
+2. Run `make` - the new version will be built automatically!
+
+No Makefile modifications required.
 
 The versions of the released binaries are listed below, the respective sources are available at https://lua.org/ftp:
 
@@ -85,6 +103,14 @@ The GitHub Actions workflow automatically builds binaries for all three platform
 - macOS builds run natively on macOS runners
 - All builds are compressed and packaged with SHA256 checksums
 - Releases are automatically created and tagged with the git commit hash
+
+### Automated Version Updates
+
+A weekly scheduled workflow checks for new Lua releases:
+- Compares current tarballs against latest versions from https://www.lua.org/ftp/
+- Automatically downloads new versions when available
+- Creates a pull request with updated tarballs and checksums
+- The dynamic Makefile automatically builds the new versions - no code changes needed!
 
 ## Acknowledgements
 
