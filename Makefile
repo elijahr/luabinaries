@@ -1,6 +1,29 @@
 # HASHES: https://www.lua.org/ftp/
 
-# default is linux "amd64" aka x86 64bit
+# Discover all Lua tarballs in the repository
+LUA_TARBALLS := $(wildcard lua-*.tar.gz)
+LUA_VERSIONS := $(patsubst lua-%.tar.gz,%,$(LUA_TARBALLS))
+
+# Function to convert version to short name (5.1.5 -> lua51)
+# Extract major.minor and convert dots to nothing
+short_name = lua$(shell echo $(1) | cut -d. -f1)$(shell echo $(1) | cut -d. -f2)
+
+# Create lists of short names for each platform
+LINUX_TARGETS := $(foreach v,$(LUA_VERSIONS),$(call short_name,$(v)))
+WINDOWS_TARGETS := $(foreach v,$(LUA_VERSIONS),$(addsuffix -windows,$(call short_name,$(v))))
+MACOS_TARGETS := $(foreach v,$(LUA_VERSIONS),$(addsuffix -macos,$(call short_name,$(v))))
+
+.PHONY: all linux windows macos clean $(LINUX_TARGETS) $(WINDOWS_TARGETS) $(MACOS_TARGETS)
+
+all: linux windows macos
+
+linux: $(LINUX_TARGETS)
+
+windows: $(WINDOWS_TARGETS)
+
+macos: $(MACOS_TARGETS)
+
+# Build function for Linux (using musl for static binaries)
 define build_lua_linux
 	$(info Building $(1))
 	mkdir -p build/linux
@@ -11,6 +34,7 @@ define build_lua_linux
 	@strip $(1)/src/luac $(1)/src/lua
 endef
 
+# Build function for Windows (cross-compile with MinGW)
 define build_lua_win64
 	$(info Building $(1))
 	mkdir -p build/win64
@@ -30,9 +54,9 @@ define build_lua_win64
 	LIBS="lua.res -l:libm.a -l:libpthread.a -lssp" \
 	make mingw
 	@x86_64-w64-mingw32-strip $(1)/src/luac.exe $(1)/src/lua.exe
-
 endef
 
+# Build function for macOS (native build with Clang)
 define build_lua_macos
 	$(info Building $(1))
 	mkdir -p build/macos
@@ -43,84 +67,38 @@ define build_lua_macos
 	@strip $(1)/src/luac $(1)/src/lua
 endef
 
-.PHONY: lua51 lua53 lua54
+# Template to generate Linux build targets
+define LINUX_template
+$(call short_name,$(1)):
+	$$(call build_lua_linux,lua-$(1))
+	@mv lua-$(1)/src/lua build/linux/$$(call short_name,$(1))
+	@mv lua-$(1)/src/luac build/linux/luac$$(shell echo $(1) | cut -d. -f1)$$(shell echo $(1) | cut -d. -f2)
+	@rm -rf lua-$(1)
+endef
 
-all: linux windows macos
+# Template to generate Windows build targets
+define WINDOWS_template
+$(call short_name,$(1))-windows:
+	-$$(call build_lua_win64,lua-$(1))
+	-@mv lua-$(1)/src/lua.exe build/win64/$$(call short_name,$(1)).exe
+	-@mv lua-$(1)/src/luac.exe build/win64/luac$$(shell echo $(1) | cut -d. -f1)$$(shell echo $(1) | cut -d. -f2).exe
+	-@mv lua-$(1)/src/lua$$(shell echo $(1) | cut -d. -f1)$$(shell echo $(1) | cut -d. -f2).dll build/win64/lua$$(shell echo $(1) | cut -d. -f1)$$(shell echo $(1) | cut -d. -f2).dll 2>/dev/null || true
+	@rm -rf lua-$(1)
+endef
 
-windows: lua51-windows lua53-windows lua54-windows
+# Template to generate macOS build targets
+define MACOS_template
+$(call short_name,$(1))-macos:
+	$$(call build_lua_macos,lua-$(1))
+	@mv lua-$(1)/src/lua build/macos/$$(call short_name,$(1))
+	@mv lua-$(1)/src/luac build/macos/luac$$(shell echo $(1) | cut -d. -f1)$$(shell echo $(1) | cut -d. -f2)
+	@rm -rf lua-$(1)
+endef
 
-linux: lua51 lua53 lua54
-
-macos: lua51-macos lua53-macos lua54-macos
-
-
-lua51: VERSION := 5.1.5
-lua51:
-	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua51
-	@mv lua-$(VERSION)/src/luac build/linux/luac51
-	@rm -rf lua-$(VERSION)
-
-lua53: VERSION := 5.3.6
-lua53:
-	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua53
-	@mv lua-$(VERSION)/src/luac build/linux/luac53
-	@rm -rf lua-$(VERSION)
-
-lua54: VERSION := 5.4.8
-lua54:
-	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua54
-	@mv lua-$(VERSION)/src/luac build/linux/luac54
-	@rm -rf lua-$(VERSION)
-
-lua51-windows: VERSION := 5.1.5
-lua51-windows:
-	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua51.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac51.exe
-	-@mv lua-$(VERSION)/src/lua51.dll build/win64/lua51.dll
-	@rm -rf lua-$(VERSION)
-
-
-
-lua53-windows: VERSION := 5.3.6
-lua53-windows:
-	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua53.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac53.exe
-	-@mv lua-$(VERSION)/src/lua53.dll build/win64/lua53.dll
-	@rm -rf lua-$(VERSION)
-
-lua54-windows: VERSION := 5.4.8
-lua54-windows:
-	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua54.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac54.exe
-	-@mv lua-$(VERSION)/src/lua54.dll build/win64/lua54.dll
-	@rm -rf lua-$(VERSION)
-
-lua51-macos: VERSION := 5.1.5
-lua51-macos:
-	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua51
-	@mv lua-$(VERSION)/src/luac build/macos/luac51
-	@rm -rf lua-$(VERSION)
-
-lua53-macos: VERSION := 5.3.6
-lua53-macos:
-	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua53
-	@mv lua-$(VERSION)/src/luac build/macos/luac53
-	@rm -rf lua-$(VERSION)
-
-lua54-macos: VERSION := 5.4.8
-lua54-macos:
-	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua54
-	@mv lua-$(VERSION)/src/luac build/macos/luac54
-	@rm -rf lua-$(VERSION)
+# Generate all targets dynamically from discovered tarballs
+$(foreach v,$(LUA_VERSIONS),$(eval $(call LINUX_template,$(v))))
+$(foreach v,$(LUA_VERSIONS),$(eval $(call WINDOWS_template,$(v))))
+$(foreach v,$(LUA_VERSIONS),$(eval $(call MACOS_template,$(v))))
 
 clean:
 	rm -rf build

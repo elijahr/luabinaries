@@ -15,15 +15,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for Lua updates from GitHub releases
+      - name: Check for Lua updates
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Function to get current version from Makefile
+          # Function to get current version from existing tarballs
           get_current_version() {
-            local lua_version=$1
-            grep "^${lua_version}: VERSION :=" Makefile | awk '{print $4}'
+            local major_minor=$1
+            ls lua-${major_minor}.*.tar.gz 2>/dev/null | \
+              grep -oP "${major_minor}\.\d+" | head -1 || echo ""
           }
 
           # Check each Lua version
@@ -37,7 +38,7 @@ jobs:
               lua54) MAJOR_MINOR="5.4" ;;
             esac
 
-            CURRENT=$(get_current_version $version)
+            CURRENT=$(get_current_version $MAJOR_MINOR)
 
             # Get latest release info from lua.org
             LATEST=$(curl -s https://www.lua.org/ftp/ | \
@@ -57,7 +58,7 @@ jobs:
           echo "updates_found=$UPDATES_FOUND" >> $GITHUB_OUTPUT
           echo -e "$UPDATE_SUMMARY" > /tmp/update_summary.txt
 
-      - name: Download new tarballs and update Makefile
+      - name: Download new tarballs and update README
         if: steps.check.outputs.updates_found == 'true'
         run: |
           # Download new tarballs if version updates are found
@@ -73,13 +74,15 @@ jobs:
 
             if [ -n "$NEW_VERSION" ]; then
               echo "Downloading lua-${NEW_VERSION}.tar.gz"
+
+              # Remove old tarball for this major.minor version
+              rm -f lua-${MAJOR_MINOR}.*.tar.gz
+
+              # Download new tarball
               curl -O "https://www.lua.org/ftp/lua-${NEW_VERSION}.tar.gz"
 
               # Calculate new SHA256
               NEW_SHA=$(sha256sum "lua-${NEW_VERSION}.tar.gz" | awk '{print $1}')
-
-              # Update Makefile version
-              sed -i "s/^${version}: VERSION :=.*/${version}: VERSION := ${NEW_VERSION}/" Makefile
 
               # Update README with new hash
               sed -i "s/lua-${MAJOR_MINOR}\.[0-9]\+\.tar\.gz.*/lua-${NEW_VERSION}.tar.gz ($(date '+%b %d  %Y')) \`${NEW_SHA}\`/" README.md
@@ -107,8 +110,9 @@ jobs:
 
             ### Changes
             - Downloaded new Lua tarballs from https://www.lua.org/ftp/
-            - Updated Makefile with new version numbers
+            - Removed old tarball versions
             - Updated README.md with new SHA256 checksums
+            - Makefile will automatically detect the new versions
 
             Please review and merge if the updates look correct.
 
