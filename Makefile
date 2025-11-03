@@ -20,7 +20,7 @@ define build_lua_linux_arm64
 	rm -rf $(1)
 	tar xf $(1).tar.gz
 	sed -i -e 's/^CC=/CC?=/' -e 's/^LIBS=/LIBS?=/' -e 's/^CFLAGS=/CFLAGS?=/' -e 's/^LDFLAGS=/LDFLAGS?=/' $(1)/src/Makefile
-	@cd $(1) && CC="aarch64-linux-gnu-gcc" CFLAGS="-O3 -static" LDFLAGS="-static" LIBS="" make posix
+	@cd $(1) && CC="aarch64-linux-gnu-gcc" CFLAGS="-O3 -static" LDFLAGS="-static" LIBS="-lm" make posix
 	@aarch64-linux-gnu-strip $(1)/src/luac $(1)/src/lua
 endef
 
