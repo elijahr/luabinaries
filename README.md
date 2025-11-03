@@ -11,7 +11,7 @@ Each platform provides both the Lua interpreter and the Lua bytecode compiler (l
 | Platform | Architecture          | Interpreter         | Compiler             | Notes                           |
 | -------- | --------------------- | ------------------- | -------------------- | ------------------------------- |
 | Linux    | x64                   | `luaVV`             | `luacVV`             | Static binaries built with musl |
-| Linux    | ARM64                 | `luaVV-linux-arm64` | `luacVV-linux-arm64` | Cross-compiled static binaries  |
+| Linux    | ARM64                 | `luaVV-linux-arm64` | `luacVV-linux-arm64` | Static binaries built with musl |
 | Windows  | x64                   | `luaVV.exe`         | `luacVV.exe`         | Cross-compiled with MinGW       |
 | macOS    | x64 (Intel)           | `luaVV-macos-x64`   | `luacVV-macos-x64`   | Native builds with Clang        |
 | macOS    | ARM64 (Apple Silicon) | `luaVV-macos-arm64` | `luacVV-macos-arm64` | Native builds with Clang        |
@@ -91,7 +91,7 @@ make macos        # Alias for macos-x64 (backwards compatibility)
 **Build Targets:**
 
 - `make linux-x64` - Build Linux x64 binaries
-- `make linux-arm64` - Build Linux ARM64 binaries (cross-compiled)
+- `make linux-arm64` - Build Linux ARM64 binaries
 - `make windows` - Build Windows x64 binaries
 - `make macos-x64` - Build macOS Intel binaries
 - `make macos-arm64` - Build macOS Apple Silicon binaries
@@ -104,6 +104,45 @@ Binaries are built to architecture-specific directories:
 - `build/win64/` - Windows x64
 - `build/macos-x64/` - macOS Intel
 - `build/macos-arm64/` - macOS Apple Silicon
+
+## Testing
+
+The repository includes comprehensive test scripts to verify binary functionality:
+
+**Test Targets:**
+
+```bash
+make test         # Run native binary tests
+make test-docker  # Run Docker-based cross-platform tests
+make test-all     # Run all tests
+```
+
+**Test Scripts:**
+
+- `test.sh` - Tests binaries on the native platform
+  - Verifies binary execution
+  - Tests Lua functionality (print, math, strings, tables)
+  - Validates architecture (using `file` command)
+  - Tests luac compilation and bytecode execution
+
+- `test-docker.sh` - Docker-based multi-architecture testing
+  - Tests Linux x64 binaries in Alpine containers
+  - Tests Linux ARM64 binaries using QEMU emulation
+  - Verifies static linking and portability
+  - Validates architecture correctness
+
+**CI/CD Testing:**
+
+All builds are automatically tested in GitHub Actions:
+
+- **Linux**: Binaries tested natively on architecture-specific runners (x64 and ARM64)
+  - Native execution tests
+  - Docker container tests for static linking verification
+- **Windows**: Binary structure and PE format verified (execution tests require Windows runners)
+- **macOS**: Comprehensive native testing on both Intel and Apple Silicon runners
+  - Architecture verification
+  - Execution tests
+  - Bytecode compilation and execution tests
 
 The versions of the released binaries are listed below, the respective sources are available at https://lua.org/ftp:
 
@@ -119,21 +158,21 @@ The released binaries are compressed to ~50% of their original size using [upx-u
 
 GitHub Actions automatically builds binaries using a matrix strategy:
 
-**Linux Builds** (Ubuntu runners):
+**Linux Builds** (Native runners):
 
-- **linux-x64**: Static binaries built with musl
-- **linux-arm64**: Cross-compiled with aarch64-linux-gnu-gcc
+- **linux-x64**: Built on ubuntu-latest runners with musl
+- **linux-arm64**: Built on ubuntu-24.04-arm64 runners with musl
 
 **Windows Builds** (Ubuntu runners):
 
-- **windows-x64**: Cross-compiled with MinGW
+- **windows-x64**: Cross-compiled with MinGW on ubuntu-latest
 
 **macOS Builds** (Native runners):
 
 - **macos-x64**: Built on macOS 13 (Intel) runners
 - **macos-arm64**: Built on macOS 14 (Apple Silicon) runners
 
-All binaries are compressed with UPX and packaged with SHA256 checksums. Releases are automatically created and tagged with the git commit hash.
+Each build job includes automated testing to verify binary functionality and architecture correctness. All binaries are compressed with UPX (Linux and Windows) and packaged with SHA256 checksums. Releases are automatically created and tagged with the git commit hash.
 
 ## Acknowledgements
 

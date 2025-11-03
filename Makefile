@@ -13,15 +13,15 @@ define build_lua_linux_x64
 	@strip $(1)/src/luac $(1)/src/lua
 endef
 
-# Linux arm64 (cross-compile with musl)
+# Linux arm64 (native build with musl)
 define build_lua_linux_arm64
 	$(info Building $(1) for Linux ARM64)
 	mkdir -p build/linux-arm64
 	rm -rf $(1)
 	tar xf $(1).tar.gz
 	sed -i -e 's/^CC=/CC?=/' -e 's/^LIBS=/LIBS?=/' -e 's/^CFLAGS=/CFLAGS?=/' -e 's/^LDFLAGS=/LDFLAGS?=/' $(1)/src/Makefile
-	@cd $(1) && CC="aarch64-linux-gnu-gcc" CFLAGS="-O3 -static" LDFLAGS="-static" LIBS="-lm" make posix
-	@aarch64-linux-gnu-strip $(1)/src/luac $(1)/src/lua
+	@cd $(1) && CC="musl-gcc" CFLAGS="-O3 -static -fPIC" LDFLAGS="-static" LIBS="" make posix
+	@strip $(1)/src/luac $(1)/src/lua
 endef
 
 # Windows x64 (MinGW cross-compile)
@@ -57,7 +57,7 @@ define build_lua_macos
 	@strip $(1)/src/luac $(1)/src/lua
 endef
 
-.PHONY: all linux-x64 linux-arm64 windows macos-x64 macos-arm64 clean
+.PHONY: all linux-x64 linux-arm64 windows macos-x64 macos-arm64 clean test test-docker test-all
 
 # Backwards compatibility aliases
 linux: linux-x64
@@ -190,3 +190,15 @@ lua54-macos-arm64:
 
 clean:
 	rm -rf build
+
+# Testing targets
+test:
+	@echo "Running native binary tests..."
+	@./test.sh
+
+test-docker:
+	@echo "Running Docker-based cross-architecture tests..."
+	@./test-docker.sh
+
+test-all: test test-docker
+	@echo "All tests completed!"
