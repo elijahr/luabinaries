@@ -1,0 +1,18 @@
+# mdformat configuration
+# https://mdformat.readthedocs.io/en/stable/users/configuration_file.html
+
+# Wrap text to this width (0 = no wrapping)
+wrap = 0
+
+# Number of spaces per indentation level
+number_sections = false
+
+# Compact tables (remove extra whitespace)
+# Requires: pip install mdformat-tables
+[plugin.tables]
+# Use compact tables without extra spacing
+
+# Format code blocks consistently
+# Requires: pip install mdformat-gfm
+[plugin.gfm]
+# Enable GitHub Flavored Markdown support

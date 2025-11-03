@@ -1,0 +1,8 @@
+# Install mdformat with required plugins:
+pip install mdformat mdformat-tables mdformat-gfm
+
+# Run mdformat:
+mdformat README.md
+
+# Check what would change:
+mdformat --check README.md
