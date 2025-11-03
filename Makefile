@@ -57,30 +57,30 @@ macos: lua51-macos lua53-macos lua54-macos
 lua51: VERSION := 5.1.5
 lua51:
 	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua51
-	@mv lua-$(VERSION)/src/luac build/linux/luac51
+	@mv lua-$(VERSION)/src/lua build/linux/lua51-linux-amd64
+	@mv lua-$(VERSION)/src/luac build/linux/luac51-linux-amd64
 	@rm -rf lua-$(VERSION)
 
 lua53: VERSION := 5.3.6
 lua53:
 	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua53
-	@mv lua-$(VERSION)/src/luac build/linux/luac53
+	@mv lua-$(VERSION)/src/lua build/linux/lua53-linux-amd64
+	@mv lua-$(VERSION)/src/luac build/linux/luac53-linux-amd64
 	@rm -rf lua-$(VERSION)
 
 lua54: VERSION := 5.4.8
 lua54:
 	$(call build_lua_linux,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/linux/lua54
-	@mv lua-$(VERSION)/src/luac build/linux/luac54
+	@mv lua-$(VERSION)/src/lua build/linux/lua54-linux-amd64
+	@mv lua-$(VERSION)/src/luac build/linux/luac54-linux-amd64
 	@rm -rf lua-$(VERSION)
 
 lua51-windows: VERSION := 5.1.5
 lua51-windows:
 	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua51.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac51.exe
-	-@mv lua-$(VERSION)/src/lua51.dll build/win64/lua51.dll
+	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua51-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac51-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/lua51.dll build/win64/lua51-windows-amd64.dll
 	@rm -rf lua-$(VERSION)
 
 
@@ -88,38 +88,38 @@ lua51-windows:
 lua53-windows: VERSION := 5.3.6
 lua53-windows:
 	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua53.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac53.exe
-	-@mv lua-$(VERSION)/src/lua53.dll build/win64/lua53.dll
+	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua53-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac53-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/lua53.dll build/win64/lua53-windows-amd64.dll
 	@rm -rf lua-$(VERSION)
 
 lua54-windows: VERSION := 5.4.8
 lua54-windows:
 	-$(call build_lua_win64,lua-${VERSION})
-	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua54.exe
-	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac54.exe
-	-@mv lua-$(VERSION)/src/lua54.dll build/win64/lua54.dll
+	-@mv lua-$(VERSION)/src/lua.exe build/win64/lua54-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/luac.exe build/win64/luac54-windows-amd64.exe
+	-@mv lua-$(VERSION)/src/lua54.dll build/win64/lua54-windows-amd64.dll
 	@rm -rf lua-$(VERSION)
 
 lua51-macos: VERSION := 5.1.5
 lua51-macos:
 	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua51
-	@mv lua-$(VERSION)/src/luac build/macos/luac51
+	@mv lua-$(VERSION)/src/lua build/macos/lua51-macos-amd64
+	@mv lua-$(VERSION)/src/luac build/macos/luac51-macos-amd64
 	@rm -rf lua-$(VERSION)
 
 lua53-macos: VERSION := 5.3.6
 lua53-macos:
 	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua53
-	@mv lua-$(VERSION)/src/luac build/macos/luac53
+	@mv lua-$(VERSION)/src/lua build/macos/lua53-macos-amd64
+	@mv lua-$(VERSION)/src/luac build/macos/luac53-macos-amd64
 	@rm -rf lua-$(VERSION)
 
 lua54-macos: VERSION := 5.4.8
 lua54-macos:
 	$(call build_lua_macos,lua-${VERSION})
-	@mv lua-$(VERSION)/src/lua build/macos/lua54
-	@mv lua-$(VERSION)/src/luac build/macos/luac54
+	@mv lua-$(VERSION)/src/lua build/macos/lua54-macos-amd64
+	@mv lua-$(VERSION)/src/luac build/macos/luac54-macos-amd64
 	@rm -rf lua-$(VERSION)
 
 clean:
