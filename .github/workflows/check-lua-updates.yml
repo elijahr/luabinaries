@@ -1,0 +1,121 @@
+name: Check for Lua Updates
+
+on:
+  schedule:
+    # Run weekly on Monday at 9:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  check-updates:
+    name: Check for new Lua releases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for Lua updates
+        id: check
+        run: |
+          # Function to get latest version for a major.minor release
+          get_latest_version() {
+            local major_minor=$1
+            curl -s https://www.lua.org/ftp/ | \
+              grep -oP "lua-${major_minor}\.\d+\.tar\.gz" | \
+              sort -V | tail -1 | \
+              grep -oP "${major_minor}\.\d+"
+          }
+
+          # Function to get current version from Makefile
+          get_current_version() {
+            local lua_version=$1
+            grep "^${lua_version}: VERSION :=" Makefile | awk '{print $4}'
+          }
+
+          # Check each Lua version
+          UPDATES_FOUND=false
+          UPDATE_SUMMARY=""
+
+          for version in lua51 lua53 lua54; do
+            case $version in
+              lua51) MAJOR_MINOR="5.1" ;;
+              lua53) MAJOR_MINOR="5.3" ;;
+              lua54) MAJOR_MINOR="5.4" ;;
+            esac
+
+            CURRENT=$(get_current_version $version)
+            LATEST=$(get_latest_version $MAJOR_MINOR)
+
+            echo "$version: Current=$CURRENT, Latest=$LATEST"
+
+            if [ "$CURRENT" != "$LATEST" ]; then
+              UPDATES_FOUND=true
+              UPDATE_SUMMARY="${UPDATE_SUMMARY}- Lua ${CURRENT} → ${LATEST}\n"
+              echo "UPDATE_${version}=${LATEST}" >> $GITHUB_ENV
+            fi
+          done
+
+          echo "updates_found=$UPDATES_FOUND" >> $GITHUB_OUTPUT
+          echo -e "$UPDATE_SUMMARY" > /tmp/update_summary.txt
+
+      - name: Download new tarballs and update Makefile
+        if: steps.check.outputs.updates_found == 'true'
+        run: |
+          # Download new tarballs if version updates are found
+          for version in lua51 lua53 lua54; do
+            case $version in
+              lua51) MAJOR_MINOR="5.1" ;;
+              lua53) MAJOR_MINOR="5.3" ;;
+              lua54) MAJOR_MINOR="5.4" ;;
+            esac
+
+            VAR_NAME="UPDATE_${version}"
+            NEW_VERSION=${!VAR_NAME}
+
+            if [ -n "$NEW_VERSION" ]; then
+              echo "Downloading lua-${NEW_VERSION}.tar.gz"
+              curl -O "https://www.lua.org/ftp/lua-${NEW_VERSION}.tar.gz"
+
+              # Calculate new SHA256
+              NEW_SHA=$(sha256sum "lua-${NEW_VERSION}.tar.gz" | awk '{print $1}')
+
+              # Update Makefile version
+              sed -i "s/^${version}: VERSION :=.*/${version}: VERSION := ${NEW_VERSION}/" Makefile
+
+              # Update README with new hash
+              sed -i "s/lua-${MAJOR_MINOR}\.[0-9]\+\.tar\.gz.*/lua-${NEW_VERSION}.tar.gz ($(date '+%b %d  %Y')) \`${NEW_SHA}\`/" README.md
+            fi
+          done
+
+      - name: Create Pull Request
+        if: steps.check.outputs.updates_found == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            Update Lua versions to latest releases
+
+            $(cat /tmp/update_summary.txt)
+          branch: update-lua-versions
+          delete-branch: true
+          title: 'Update Lua to latest versions'
+          body: |
+            ## Lua Version Updates
+
+            This automated PR updates Lua to the latest available versions:
+
+            $(cat /tmp/update_summary.txt)
+
+            ### Changes
+            - Downloaded new Lua tarballs from https://www.lua.org/ftp/
+            - Updated Makefile with new version numbers
+            - Updated README.md with new SHA256 checksums
+
+            Please review and merge if the updates look correct.
+
+            ---
+            *This PR was automatically created by the check-lua-updates workflow*
+          labels: |
+            dependencies
+            automated
