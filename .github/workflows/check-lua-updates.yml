@@ -20,13 +20,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Function to get latest version for a major.minor release from GitHub
-          get_latest_github_release() {
-            local major_minor=$1
-            gh api repos/lua/lua/releases --jq ".[] | select(.tag_name | startswith(\"v${major_minor}\")) | .tag_name" | \
-              head -1 | sed 's/^v//'
-          }
-
           # Function to get current version from Makefile
           get_current_version() {
             local lua_version=$1
@@ -45,16 +38,12 @@ jobs:
             esac
 
             CURRENT=$(get_current_version $version)
-            LATEST=$(get_latest_github_release $MAJOR_MINOR)
 
-            # If no GitHub release found, fall back to lua.org
-            if [ -z "$LATEST" ]; then
-              echo "No GitHub release found for ${MAJOR_MINOR}, checking lua.org..."
-              LATEST=$(curl -s https://www.lua.org/ftp/ | \
-                grep -oP "lua-${MAJOR_MINOR}\.\d+\.tar\.gz" | \
-                sort -V | tail -1 | \
-                grep -oP "${MAJOR_MINOR}\.\d+")
-            fi
+            # Get latest release info from lua.org
+            LATEST=$(curl -s https://www.lua.org/ftp/ | \
+              grep -oP "lua-${MAJOR_MINOR}\.\d+\.tar\.gz" | \
+              sort -V | tail -1 | \
+              grep -oP "${MAJOR_MINOR}\.\d+")
 
             echo "$version: Current=$CURRENT, Latest=$LATEST"
 
