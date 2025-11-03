@@ -26,20 +26,26 @@ jobs:
       - name: short SHA of current commit
         id: sha
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: install apt-fast
+        uses: elijahr/setup-apt-fast@v0.0.1-dev.2
       - name: install compiler and dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y make musl musl-tools upx-ucl gcc-mingw-w64
+          sudo apt-fast update
+          sudo apt-fast install -y make musl musl-tools upx-ucl gcc-mingw-w64
       - name: build Linux and Windows binaries
         run: make linux windows
       - name: compress all binaries
+        shell: bash
         run: |
-          upx-ucl -9 build/linux/*
-          upx-ucl -9 build/win64/*
+          upx-ucl -9 build/linux/* &
+          upx-ucl -9 build/win64/* &
+          wait
       - name: calculate SHA sums
+        shell: bash
         run: |
-           sha256sum build/linux/* > build/linux/SHA256SUMS-linux-x64.txt
-           sha256sum build/win64/* > build/win64/SHA256SUMS-windows-x64.txt
+          sha256sum build/linux/* > build/linux/SHA256SUMS-linux-x64.txt &
+          sha256sum build/win64/* > build/win64/SHA256SUMS-windows-x64.txt &
+          wait
       - name: Upload artifact linux-x64
         uses: actions/upload-artifact@v4
         with:
