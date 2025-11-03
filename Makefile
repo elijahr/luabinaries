@@ -33,13 +33,25 @@ define build_lua_win64
 
 endef
 
+define build_lua_macos
+	$(info Building $(1))
+	mkdir -p build/macos
+	rm -rf $(1)
+	tar xf $(1).tar.gz
+	sed -i '' -e 's/^CC=/CC?=/' -e 's/^LIBS=/LIBS?=/' -e 's/^CFLAGS=/CFLAGS?=/' -e 's/^LDFLAGS=/LDFLAGS?=/' $(1)/src/Makefile
+	@cd $(1) && CC="clang" CFLAGS="-O3" LDFLAGS="" LIBS="" make macosx
+	@strip $(1)/src/luac $(1)/src/lua
+endef
+
 .PHONY: lua51 lua53 lua54
 
-all: linux windows
+all: linux windows macos
 
 windows: lua51-windows lua53-windows lua54-windows
 
 linux: lua51 lua53 lua54
+
+macos: lua51-macos lua53-macos lua54-macos
 
 
 lua51: VERSION := 5.1.5
@@ -89,6 +101,26 @@ lua54-windows:
 	-@mv lua-$(VERSION)/src/lua54.dll build/win64/lua54.dll
 	@rm -rf lua-$(VERSION)
 
+lua51-macos: VERSION := 5.1.5
+lua51-macos:
+	$(call build_lua_macos,lua-${VERSION})
+	@mv lua-$(VERSION)/src/lua build/macos/lua51
+	@mv lua-$(VERSION)/src/luac build/macos/luac51
+	@rm -rf lua-$(VERSION)
+
+lua53-macos: VERSION := 5.3.6
+lua53-macos:
+	$(call build_lua_macos,lua-${VERSION})
+	@mv lua-$(VERSION)/src/lua build/macos/lua53
+	@mv lua-$(VERSION)/src/luac build/macos/luac53
+	@rm -rf lua-$(VERSION)
+
+lua54-macos: VERSION := 5.4.8
+lua54-macos:
+	$(call build_lua_macos,lua-${VERSION})
+	@mv lua-$(VERSION)/src/lua build/macos/lua54
+	@mv lua-$(VERSION)/src/luac build/macos/luac54
+	@rm -rf lua-$(VERSION)
 
 clean:
 	rm -rf build

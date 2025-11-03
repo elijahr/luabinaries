@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  musl-build:
-    name: 🏗️ build
+  linux-windows-build:
+    name: 🏗️ build (Linux & Windows)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,35 +30,64 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y make musl musl-tools upx-ucl gcc-mingw-w64
-      - name: build all binaries
-        run: make
+      - name: build Linux and Windows binaries
+        run: make linux windows
       - name: compress all binaries
         run: |
           upx-ucl -9 build/linux/*
           upx-ucl -9 build/win64/*
       - name: calculate SHA sums
         run: |
-           sha256sum build/linux/* > build/SHA256SUMS.txt
-           sha256sum build/win64/* >> build/SHA256SUMS.txt
+           sha256sum build/linux/* > build/SHA256SUMS-linux-amd64.txt
+           sha256sum build/win64/* > build/SHA256SUMS-windows-amd64.txt
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
           name: linux-amd64
           path: |
             build/linux/*
-            build/SHA256SUMS.txt
-      - name: Upload artifact windows-win64
+            build/SHA256SUMS-linux-amd64.txt
+      - name: Upload artifact windows-amd64
         uses: actions/upload-artifact@v4
         with:
-          name: windows-win64
+          name: windows-amd64
           path: |
             build/win64/*
+            build/SHA256SUMS-windows-amd64.txt
+    outputs:
+       git_sha_short: ${{ steps.sha.outputs.sha_short }}
+
+  macos-build:
+    name: 🏗️ build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: short SHA of current commit
+        id: sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: build macOS binaries
+        run: make macos
+      - name: compress all binaries
+        run: |
+          upx build/macos/*
+      - name: calculate SHA sums
+        run: |
+           shasum -a 256 build/macos/* > build/SHA256SUMS-macos-amd64.txt
+      - name: Upload artifact macos-amd64
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-amd64
+          path: |
+            build/macos/*
+            build/SHA256SUMS-macos-amd64.txt
     outputs:
        git_sha_short: ${{ steps.sha.outputs.sha_short }}
 
   draft-binary-release:
     name: 📦 Pack
-    needs: [musl-build]
+    needs: [linux-windows-build, macos-build]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -68,14 +97,17 @@ jobs:
             release
       - name: show directory structure
         run: tree
-      - name: relase all binary artifacts
+      - name: release all binary artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             release/linux-amd64/linux/*
-            release/linux-amd64/SHA256SUMS.txt
-            release/windows-win64/*
-          tag_name: ${{ needs.musl-build.outputs.git_sha_short }}
+            release/linux-amd64/SHA256SUMS-linux-amd64.txt
+            release/windows-amd64/win64/*
+            release/windows-amd64/SHA256SUMS-windows-amd64.txt
+            release/macos-amd64/macos/*
+            release/macos-amd64/SHA256SUMS-macos-amd64.txt
+          tag_name: ${{ needs.linux-windows-build.outputs.git_sha_short }}
           draft: false
           prerelease: false
           fail_on_unmatched_files: true

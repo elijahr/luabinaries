@@ -2,32 +2,67 @@
 
 This repository houses the most recent stable versions of the Lua language and creates static binaries ready to download and run.
 
-We aim to create Lua interpreters that are optimized, compact and can run on most Lua supported platforms. 
+We aim to create Lua interpreters that are optimized, compact and can run on most Lua supported platforms.
 
-So far we support:
-- Linux x86 64bit (also known as amd64) - filename pattern `luaVV`
-- Windows x86 64bit (win64) - filename pattern `luaVV.exe`
+## Supported Platforms
+
+- **Linux amd64** (x86 64-bit) - Static binaries using musl - filename pattern `luaVV`
+- **Windows amd64** (x86 64-bit) - MinGW builds - filename pattern `luaVV.exe`
+- **macOS amd64** (x86 64-bit) - Native builds - filename pattern `luaVV`
 ## Download
 
 Direct download to our released binaries is possible using the following links:
 
-- lua 5.1 for linux 64 https://github.com/dyne/luabinaries/releases/latest/download/lua51
-- lua 5.3 for linux 64 https://github.com/dyne/luabinaries/releases/latest/download/lua53
-- lua 5.4 for linux 64 https://github.com/dyne/luabinaries/releases/latest/download/lua54
+### Linux amd64
+- Lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51
+- Lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53
+- Lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54
 
-Lua bytecode compilers are available simply by changing the file name to `luacVV`.
+### Windows amd64
+- Lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51.exe
+- Lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53.exe
+- Lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54.exe
+
+### macOS amd64
+- Lua 5.1: https://github.com/dyne/luabinaries/releases/latest/download/lua51
+- Lua 5.3: https://github.com/dyne/luabinaries/releases/latest/download/lua53
+- Lua 5.4: https://github.com/dyne/luabinaries/releases/latest/download/lua54
+
+Lua bytecode compilers are available simply by changing the file name to `luacVV` (or `luacVV.exe` for Windows).
 
 Releases are tagged with the GitHub hash and listed in the [Release page](https://github.com/dyne/luabinaries/releases/).
 
 ## Building
 
-Make sure you installed the dependencies needed for building in your Linux system:
+The [Makefile](https://github.com/dyne/luabinaries/blob/main/Makefile) does everything needed using the original Lua source-code releases archived in this repository.
 
-```
+### Linux and Windows Builds
+
+To build Linux and Windows binaries on a Linux system, install the required dependencies:
+
+```bash
 sudo apt-get install -y make musl musl-tools gcc-mingw-w64
 ```
 
-The [Makefile](https://github.com/dyne/luabinaries/blob/main/Makefile) does everything needed using the original Lua source-code releases archived in this repository. Just run `make` to compile the linux binaries and cross-compile the Windows-executables.
+Then build:
+```bash
+make linux    # Build Linux binaries
+make windows  # Build Windows binaries
+make          # Build all platforms (Linux, Windows, macOS)
+```
+
+### macOS Builds
+
+To build macOS binaries on a macOS system:
+
+```bash
+make macos    # Build macOS binaries
+```
+
+The builds create optimized binaries in the `build/` directory organized by platform:
+- `build/linux/` - Linux amd64 binaries
+- `build/win64/` - Windows amd64 binaries
+- `build/macos/` - macOS amd64 binaries
 
 The versions of the released binaries are listed below, the respective sources are available at https://lua.org/ftp:
 
@@ -35,9 +70,21 @@ The versions of the released binaries are listed below, the respective sources a
 - lua-5.3.6.tar.gz (Sep 14  2020) `fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60`
 - lua-5.4.8.tar.gz (May 21  2025) `4f18ddae154e793e46eeab727c59ef1c0c0c2b744e7b94219710d76f530629ae`
 
-To build static binaries ready to run everywhere, we use [Musl](https://musl.libc.org/).
+### Build Optimizations
 
-The released binaries are compressed to ~50% of their original size using [upx-ucl](https://upx.github.io/).
+- **Linux**: Static binaries built with [Musl](https://musl.libc.org/) for portability
+- **Windows**: Cross-compiled using MinGW
+- **macOS**: Native builds using Clang
+
+The released binaries are compressed to ~50% of their original size using [UPX](https://upx.github.io/).
+
+### Automated Builds
+
+The GitHub Actions workflow automatically builds binaries for all three platforms:
+- Linux and Windows builds run on Ubuntu using musl and MinGW cross-compilation
+- macOS builds run natively on macOS runners
+- All builds are compressed and packaged with SHA256 checksums
+- Releases are automatically created and tagged with the git commit hash
 
 ## Acknowledgements
 
