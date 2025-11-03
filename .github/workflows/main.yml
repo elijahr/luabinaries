@@ -98,12 +98,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/linux-amd64/linux/*
-            release/linux-amd64/SHA256SUMS-linux-amd64.txt
-            release/windows-amd64/win64/*
-            release/windows-amd64/SHA256SUMS-windows-amd64.txt
-            release/macos-amd64/macos/*
-            release/macos-amd64/SHA256SUMS-macos-amd64.txt
+            release/linux-amd64/*
+            release/windows-amd64/*
+            release/macos-amd64/*
           tag_name: ${{ needs.linux-windows-build.outputs.git_sha_short }}
           draft: false
           prerelease: false
