@@ -44,16 +44,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64
-          path: |
-            build/linux/*
-            build/SHA256SUMS-linux-x64.txt
+          path: build/linux/
+      - name: Upload SHA256SUMS linux-x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64
+          path: build/SHA256SUMS-linux-x64.txt
       - name: Upload artifact windows-x64
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: |
-            build/win64/*
-            build/SHA256SUMS-windows-x64.txt
+          path: build/win64/
+      - name: Upload SHA256SUMS windows-x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: build/SHA256SUMS-windows-x64.txt
     outputs:
        git_sha_short: ${{ steps.sha.outputs.sha_short }}
 
@@ -76,9 +82,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-x64
-          path: |
-            build/macos/*
-            build/SHA256SUMS-macos-x64.txt
+          path: build/macos/
+      - name: Upload SHA256SUMS macos-x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64
+          path: build/SHA256SUMS-macos-x64.txt
     outputs:
        git_sha_short: ${{ steps.sha.outputs.sha_short }}
 
