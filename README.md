@@ -64,8 +64,10 @@ make          # Build all platforms (Linux, Windows, macOS)
 To build macOS binaries on a macOS system:
 
 ```bash
-make macos    # Build macOS binaries
+make macos    # Build macOS binaries only
 ```
+
+**Note:** On macOS, use `make macos` specifically. The `make linux` and `make windows` targets require Linux-specific tools (musl-gcc, MinGW) and will not work on macOS.
 
 ### Output Structure
 
