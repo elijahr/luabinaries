@@ -13,8 +13,13 @@ concurrency:
 
 jobs:
   linux-build:
-    name: 🏗️ build (Linux x64 + arm64)
+    name: 🏗️ build (Linux ${{ matrix.arch }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+          - arch: arm64
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,45 +29,39 @@ jobs:
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: install apt-fast
         uses: elijahr/setup-apt-fast@v0.0.1-dev.2
-      - name: install compilers and dependencies
+      - name: install compiler and dependencies (x64)
+        if: matrix.arch == 'x64'
         run: |
           sudo apt-fast update
-          sudo apt-fast install -y make musl musl-tools upx-ucl qemu-user-static
+          sudo apt-fast install -y make musl musl-tools upx-ucl
+      - name: install compiler and dependencies (arm64 cross-compile)
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-fast update
+          sudo apt-fast install -y make upx-ucl qemu-user-static
           # Download and install musl cross-compiler for ARM64
           wget -q https://musl.cc/aarch64-linux-musl-cross.tgz
           tar xf aarch64-linux-musl-cross.tgz
           sudo mv aarch64-linux-musl-cross /opt/
           echo "/opt/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
       - name: verify cross-compiler
+        if: matrix.arch == 'arm64'
         run: |
           which aarch64-linux-musl-gcc
           aarch64-linux-musl-gcc --version
-      - name: build Linux x64 binaries
-        run: make linux-x64
-      - name: build Linux arm64 binaries (cross-compile)
-        run: make linux-arm64
+      - name: build Linux binaries
+        run: make linux-${{ matrix.arch }}
       - name: debug - list built binaries
-        run: |
-          echo "=== Linux x64 binaries ==="
-          ls -lah build/linux-x64/
-          echo "=== Linux arm64 binaries ==="
-          ls -lah build/linux-arm64/
+        run: ls -lah build/linux-${{ matrix.arch }}/
       - name: test Linux binaries
         run: ./test.sh
-      - name: compress and checksum x64
-        run: ./post-build.sh build/linux-x64 linux-x64
-      - name: compress and checksum arm64
-        run: ./post-build.sh build/linux-arm64 linux-arm64
-      - name: Upload artifact linux-x64
+      - name: compress and checksum
+        run: ./post-build.sh build/linux-${{ matrix.arch }} linux-${{ matrix.arch }}
+      - name: Upload artifact linux-${{ matrix.arch }}
         uses: actions/upload-artifact@v5
         with:
-          name: linux-x64
-          path: build/linux-x64/
-      - name: Upload artifact linux-arm64
-        uses: actions/upload-artifact@v5
-        with:
-          name: linux-arm64
-          path: build/linux-arm64/
+          name: linux-${{ matrix.arch }}
+          path: build/linux-${{ matrix.arch }}/
     outputs:
        git_sha_short: ${{ steps.sha.outputs.sha_short }}
 
@@ -80,8 +79,9 @@ jobs:
         uses: elijahr/setup-apt-fast@v0.0.1-dev.2
       - name: install compiler and dependencies
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-fast update
-          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine
+          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine wine32 wine64
       - name: build Windows binaries
         run: make windows
       - name: debug - list built binaries
