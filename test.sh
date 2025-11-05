@@ -48,6 +48,12 @@ test_lua_binary() {
 
     print_info "Testing: $binary"
 
+    # Set up wine prefix for Windows binaries
+    local exe_cmd=""
+    if [ "$platform" = "windows" ]; then
+        exe_cmd="wine "
+    fi
+
     # Test 1: Binary is executable
     ((TESTS_RUN++)) || true
     if [ -x "$binary" ]; then
@@ -60,7 +66,7 @@ test_lua_binary() {
     # Test 2: Version check
     ((TESTS_RUN++)) || true
     print_test "Checking Lua version"
-    version_output=$("$binary" -v 2>&1 | head -n1)
+    version_output=$(${exe_cmd}"$binary" -v 2>&1 | head -n1)
     status=$?
     if [ $status -ne 0 ]; then
         print_fail "Binary execution failed with status $status. Output: $version_output"
@@ -76,7 +82,7 @@ test_lua_binary() {
     # Test 3: Execute simple Lua code
     ((TESTS_RUN++)) || true
     print_test "Running simple Lua code"
-    result=$("$binary" -e "print('hello')" 2>&1)
+    result=$(${exe_cmd}"$binary" -e "print('hello')" 2>&1)
     status=$?
     if [ $status -ne 0 ]; then
         print_fail "Binary execution failed with status $status. Output: $result"
@@ -92,7 +98,7 @@ test_lua_binary() {
     # Test 4: Math operations
     ((TESTS_RUN++)) || true
     print_test "Testing math operations"
-    result=$("$binary" -e "print(2 + 2)" 2>&1)
+    result=$(${exe_cmd}"$binary" -e "print(2 + 2)" 2>&1)
     status=$?
     if [ $status -ne 0 ]; then
         print_fail "Binary execution failed with status $status. Output: $result"
@@ -108,7 +114,7 @@ test_lua_binary() {
     # Test 5: String operations
     ((TESTS_RUN++)) || true
     print_test "Testing string operations"
-    result=$("$binary" -e "print(string.upper('test'))" 2>&1)
+    result=$(${exe_cmd}"$binary" -e "print(string.upper('test'))" 2>&1)
     status=$?
     if [ $status -ne 0 ]; then
         print_fail "Binary execution failed with status $status. Output: $result"
@@ -124,7 +130,7 @@ test_lua_binary() {
     # Test 6: Table operations
     ((TESTS_RUN++)) || true
     print_test "Testing table operations"
-    result=$("$binary" -e "t = {1, 2, 3}; print(#t)" 2>&1)
+    result=$(${exe_cmd}"$binary" -e "t = {1, 2, 3}; print(#t)" 2>&1)
     status=$?
     if [ $status -ne 0 ]; then
         print_fail "Binary execution failed with status $status. Output: $result"
@@ -204,6 +210,12 @@ test_luac_binary() {
 
     print_info "Testing: $luac_binary"
 
+    # Set up wine prefix for Windows binaries
+    local exe_cmd=""
+    if [[ "$luac_binary" == *.exe ]]; then
+        exe_cmd="wine "
+    fi
+
     # Test 1: Binary is executable
     ((TESTS_RUN++)) || true
     if [ -x "$luac_binary" ]; then
@@ -225,7 +237,7 @@ test_luac_binary() {
     echo "print('bytecode test')" > "$temp_dir/test.lua"
 
     # Compile it
-    compile_output=$("$luac_binary" -o "$temp_dir/test.luac" "$temp_dir/test.lua" 2>&1)
+    compile_output=$(${exe_cmd}"$luac_binary" -o "$temp_dir/test.luac" "$temp_dir/test.lua" 2>&1)
     compile_status=$?
     if [ $compile_status -ne 0 ]; then
         print_fail "Bytecode compilation failed with status $compile_status. Output: $compile_output"
@@ -233,7 +245,7 @@ test_luac_binary() {
     fi
 
     # Run the compiled bytecode
-    result=$("$lua_binary" "$temp_dir/test.luac" 2>&1)
+    result=$(${exe_cmd}"$lua_binary" "$temp_dir/test.luac" 2>&1)
     exec_status=$?
     if [ $exec_status -ne 0 ]; then
         print_fail "Bytecode execution failed with status $exec_status. Output: $result"
@@ -280,9 +292,9 @@ main() {
         print_info "Testing Windows x64 binaries"
 
         # Check if wine is available - it's required for Windows binary testing
-        if ! command -v wine64 &> /dev/null; then
-            print_fail "wine64 is required to test Windows binaries but is not installed"
-            echo "Install wine64 with: sudo apt install wine64"
+        if ! command -v wine &> /dev/null; then
+            print_fail "wine is required to test Windows binaries but is not installed"
+            echo "Install wine with: sudo apt install wine"
             exit 1
         fi
 

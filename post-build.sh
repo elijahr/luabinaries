@@ -19,9 +19,11 @@ fi
 
 echo "Post-processing binaries in $BUILD_DIR..."
 
-# Compress binaries with UPX
+# Compress windows and linux binaries with UPX
 echo "Compressing binaries..."
-upx-ucl -9 "$BUILD_DIR"/*
+if [[ $PLATFORM == "windows" || $PLATFORM == "linux" ]]; then
+    upx-ucl -9 "$BUILD_DIR"/*
+fi
 
 # Calculate checksums (use sha256sum on Linux/Windows, shasum on macOS)
 echo "Calculating SHA256 checksums..."
