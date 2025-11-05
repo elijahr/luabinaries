@@ -37,34 +37,10 @@ jobs:
           sudo apt-fast install -y make musl musl-tools upx-ucl
       - name: build Linux binaries
         run: make linux-${{ matrix.arch }}
-      - name: test Linux binaries natively
-        shell: bash
-        run: |
-          echo "Testing ${{ matrix.arch }} binaries natively on $(uname -m)..."
-          chmod +x test.sh
-
-          # Test binaries natively
-          ./test.sh
-
-          # Also test with Docker to verify static linking works in minimal environments
-          echo "Testing binaries in minimal Docker container..."
-          docker run --rm -v "$(pwd)/build/linux-${{ matrix.arch }}:/binaries:ro" alpine:latest sh -c '
-            echo "Testing in $(uname -m) container"
-            for file in /binaries/lua*; do
-              [ -x "$file" ] || continue
-              echo "Testing $(basename $file)"
-              "$file" -v
-              "$file" -e "print(\"✓ Test passed\")"
-            done
-          '
-      - name: compress all binaries
-        shell: bash
-        run: |
-          upx-ucl -9 build/linux-${{ matrix.arch }}/*
-      - name: calculate SHA sums
-        shell: bash
-        run: |
-          sha256sum build/linux-${{ matrix.arch }}/* > build/linux-${{ matrix.arch }}/SHA256SUMS-linux-${{ matrix.arch }}.txt
+      - name: test Linux binaries
+        run: ./test.sh
+      - name: compress and checksum
+        run: ./post-build.sh build/linux-${{ matrix.arch }} linux-${{ matrix.arch }}
       - name: Upload artifact linux-${{ matrix.arch }}
         uses: actions/upload-artifact@v5
         with:
@@ -88,47 +64,13 @@ jobs:
       - name: install compiler and dependencies
         run: |
           sudo apt-fast update
-          sudo apt-fast install -y make upx-ucl gcc-mingw-w64
+          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine64
       - name: build Windows binaries
         run: make windows
-      - name: verify Windows binaries
-        shell: bash
-        run: |
-          echo "Verifying Windows binaries exist and are PE executables..."
-          for version in 51 53 54; do
-            if [ -f "build/win64/lua$version.exe" ]; then
-              file_type=$(file build/win64/lua$version.exe)
-              echo "✓ lua$version.exe: $file_type"
-              if ! echo "$file_type" | grep -q "PE32+.*x86-64"; then
-                echo "✗ Error: lua$version.exe is not a valid Windows x64 executable"
-                exit 1
-              fi
-            else
-              echo "✗ Error: lua$version.exe not found"
-              exit 1
-            fi
-
-            if [ -f "build/win64/luac$version.exe" ]; then
-              file_type=$(file build/win64/luac$version.exe)
-              echo "✓ luac$version.exe: $file_type"
-              if ! echo "$file_type" | grep -q "PE32+.*x86-64"; then
-                echo "✗ Error: luac$version.exe is not a valid Windows x64 executable"
-                exit 1
-              fi
-            else
-              echo "✗ Error: luac$version.exe not found"
-              exit 1
-            fi
-          done
-          echo "All Windows binaries verified successfully!"
-      - name: compress all binaries
-        shell: bash
-        run: |
-          upx-ucl -9 build/win64/*
-      - name: calculate SHA sums
-        shell: bash
-        run: |
-          sha256sum build/win64/* > build/win64/SHA256SUMS-windows-x64.txt
+      - name: test Windows binaries
+        run: ./test.sh
+      - name: compress and checksum
+        run: ./post-build.sh build/win64 windows-x64
       - name: Upload artifact windows-x64
         uses: actions/upload-artifact@v5
         with:
@@ -157,86 +99,9 @@ jobs:
       - name: build macOS binaries
         run: make macos-${{ matrix.arch }}
       - name: test macOS binaries
-        shell: bash
-        run: |
-          echo "Testing macOS ${{ matrix.arch }} binaries..."
-
-          for version in 51 53 54; do
-            binary="build/macos-${{ matrix.arch }}/lua$version-macos-${{ matrix.arch }}"
-            luac_binary="build/macos-${{ matrix.arch }}/luac$version-macos-${{ matrix.arch }}"
-
-            echo "Testing $binary"
-
-            # Verify binary exists and is executable
-            if [ ! -x "$binary" ]; then
-              echo "✗ Error: $binary is not executable"
-              exit 1
-            fi
-
-            # Verify architecture
-            arch_info=$(file "$binary")
-            echo "Architecture: $arch_info"
-            if [ "${{ matrix.arch }}" = "arm64" ]; then
-              if ! echo "$arch_info" | grep -q "arm64"; then
-                echo "✗ Error: Expected arm64 architecture"
-                exit 1
-              fi
-            else
-              if ! echo "$arch_info" | grep -q "x86_64"; then
-                echo "✗ Error: Expected x86_64 architecture"
-                exit 1
-              fi
-            fi
-
-            # Test version
-            version_output=$("$binary" -v 2>&1 | head -n1)
-            echo "Version: $version_output"
-
-            # Test execution
-            result=$("$binary" -e 'print("Hello from Lua")' 2>&1)
-            if [ "$result" != "Hello from Lua" ]; then
-              echo "✗ Error: Binary execution failed"
-              exit 1
-            fi
-
-            # Test math
-            result=$("$binary" -e 'print(2 + 2)' 2>&1)
-            if [ "$result" != "4" ]; then
-              echo "✗ Error: Math test failed"
-              exit 1
-            fi
-
-            # Test luac
-            echo "Testing $luac_binary"
-            if [ ! -x "$luac_binary" ]; then
-              echo "✗ Error: $luac_binary is not executable"
-              exit 1
-            fi
-
-            # Create a temp file for bytecode testing
-            temp_lua=$(mktemp).lua
-            temp_luac=$(mktemp).luac
-            echo 'print("bytecode test")' > "$temp_lua"
-
-            # Compile and execute
-            "$luac_binary" -o "$temp_luac" "$temp_lua"
-            result=$("$binary" "$temp_luac" 2>&1)
-            if [ "$result" != "bytecode test" ]; then
-              echo "✗ Error: Bytecode test failed"
-              rm -f "$temp_lua" "$temp_luac"
-              exit 1
-            fi
-
-            rm -f "$temp_lua" "$temp_luac"
-
-            echo "✓ All tests passed for Lua $version"
-            echo ""
-          done
-
-          echo "All macOS ${{ matrix.arch }} binaries tested successfully!"
-      - name: calculate SHA sums
-        run: |
-           shasum -a 256 build/macos-${{ matrix.arch }}/* > build/macos-${{ matrix.arch }}/SHA256SUMS-macos-${{ matrix.arch }}.txt
+        run: ./test.sh
+      - name: compress and checksum
+        run: ./post-build.sh build/macos-${{ matrix.arch }} macos-${{ matrix.arch }}
       - name: Upload artifact macos-${{ matrix.arch }}
         uses: actions/upload-artifact@v5
         with:

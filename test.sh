@@ -239,22 +239,19 @@ main() {
 
     if [ -d "build/win64" ]; then
         print_info "Testing Windows x64 binaries"
+
+        # Check if wine is available - it's required for Windows binary testing
+        if ! command -v wine64 &> /dev/null; then
+            print_fail "wine64 is required to test Windows binaries but is not installed"
+            echo "Install wine64 with: sudo apt install wine64"
+            exit 1
+        fi
+
         for version in 51 53 54; do
             expected_ver=$(echo "$version" | sed 's/\(.\)\(.\)/\1.\2/')
-            # On Linux/macOS, we can check if wine is available
-            if command -v wine64 &> /dev/null; then
-                # Use wine to test Windows binaries
-                test_lua_binary "build/win64/lua$version.exe" "Lua $expected_ver" "windows"
-                test_luac_binary "build/win64/luac$version.exe" "build/win64/lua$version.exe" "Lua $expected_ver"
-            else
-                print_info "Wine not available, skipping Windows binary execution tests"
-                ((TESTS_RUN++))
-                if [ -f "build/win64/lua$version.exe" ]; then
-                    print_pass "Windows binary exists: lua$version.exe"
-                else
-                    print_fail "Windows binary missing: lua$version.exe"
-                fi
-            fi
+            # Use wine to test Windows binaries
+            test_lua_binary "build/win64/lua$version.exe" "Lua $expected_ver" "windows"
+            test_luac_binary "build/win64/luac$version.exe" "build/win64/lua$version.exe" "Lua $expected_ver"
         done
     fi
 
