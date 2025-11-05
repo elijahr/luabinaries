@@ -81,7 +81,11 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-fast update
-          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine wine32 wine64
+          sudo apt-fast install -y make upx-ucl gcc-mingw-w64
+          # Install wine with proper 32-bit support for Ubuntu 24.04
+          sudo apt-fast install -y --install-recommends wine64 wine32:i386
+          # Initialize wine to prevent first-run dialogs
+          wine --version || true
       - name: build Windows binaries
         run: make windows
       - name: debug - list built binaries
