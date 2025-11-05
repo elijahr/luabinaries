@@ -13,15 +13,15 @@ define build_lua_linux_x64
 	@strip $(1)/src/luac $(1)/src/lua
 endef
 
-# Linux arm64 (native build with musl)
+# Linux arm64 (cross-compile from x64 with musl)
 define build_lua_linux_arm64
-	$(info Building $(1) for Linux ARM64)
+	$(info Building $(1) for Linux ARM64 (cross-compiling))
 	mkdir -p build/linux-arm64
 	rm -rf $(1)
 	tar xf $(1).tar.gz
 	sed -i -e 's/^CC=/CC?=/' -e 's/^LIBS=/LIBS?=/' -e 's/^CFLAGS=/CFLAGS?=/' -e 's/^LDFLAGS=/LDFLAGS?=/' $(1)/src/Makefile
-	@cd $(1) && CC="musl-gcc" CFLAGS="-O3 -static -fPIC" LDFLAGS="-static" LIBS="" make posix
-	@strip $(1)/src/luac $(1)/src/lua
+	@cd $(1) && CC="aarch64-linux-musl-gcc" CFLAGS="-O3 -static -fPIC" LDFLAGS="-static" LIBS="" make posix
+	@aarch64-linux-musl-strip $(1)/src/luac $(1)/src/lua
 endef
 
 # Windows x64 (MinGW cross-compile)

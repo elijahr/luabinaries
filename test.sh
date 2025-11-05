@@ -48,10 +48,19 @@ test_lua_binary() {
 
     print_info "Testing: $binary"
 
-    # Set up wine prefix for Windows binaries
+    # Set up execution prefix for cross-platform testing
     local exe_cmd=""
     if [ "$platform" = "windows" ]; then
         exe_cmd="wine "
+    elif [ "$platform" = "linux-arm64" ] && [ "$(uname -m)" = "x86_64" ]; then
+        # Cross-testing ARM64 on x64 - use QEMU
+        if command -v qemu-aarch64-static &> /dev/null; then
+            exe_cmd="qemu-aarch64-static "
+            print_info "Using QEMU for ARM64 binary emulation"
+        else
+            print_fail "qemu-aarch64-static required for ARM64 testing on x64 but not found"
+            return 1
+        fi
     fi
 
     # Test 1: Binary is executable
@@ -210,10 +219,18 @@ test_luac_binary() {
 
     print_info "Testing: $luac_binary"
 
-    # Set up wine prefix for Windows binaries
+    # Set up execution prefix for cross-platform testing
     local exe_cmd=""
     if [[ "$luac_binary" == *.exe ]]; then
         exe_cmd="wine "
+    elif [[ "$luac_binary" == *"linux-arm64"* ]] && [ "$(uname -m)" = "x86_64" ]; then
+        # Cross-testing ARM64 on x64 - use QEMU
+        if command -v qemu-aarch64-static &> /dev/null; then
+            exe_cmd="qemu-aarch64-static "
+        else
+            print_fail "qemu-aarch64-static required for ARM64 testing on x64 but not found"
+            return 1
+        fi
     fi
 
     # Test 1: Binary is executable
