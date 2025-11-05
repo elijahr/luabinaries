@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+set -exo pipefail
+
+# Error trap to show exact failure point
+trap 'echo "❌ Error on line $LINENO: Command failed with exit code $?"' ERR
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,12 +21,12 @@ print_test() {
 
 print_pass() {
     echo -e "${GREEN}[PASS]${NC} $1"
-    ((TESTS_PASSED++))
+    ((TESTS_PASSED++)) || true
 }
 
 print_fail() {
     echo -e "${RED}[FAIL]${NC} $1"
-    ((TESTS_FAILED++))
+    ((TESTS_FAILED++)) || true
 }
 
 print_info() {
@@ -36,6 +39,8 @@ test_lua_binary() {
     local expected_version=$2
     local platform=$3
 
+    echo "🔍 DEBUG: Entering test_lua_binary for $binary (platform: $platform, expected: $expected_version)"
+
     if [ ! -f "$binary" ]; then
         print_fail "Binary not found: $binary"
         return 1
@@ -44,7 +49,7 @@ test_lua_binary() {
     print_info "Testing: $binary"
 
     # Test 1: Binary is executable
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     if [ -x "$binary" ]; then
         print_pass "Binary is executable"
     else
@@ -53,9 +58,14 @@ test_lua_binary() {
     fi
 
     # Test 2: Version check
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Checking Lua version"
-    version_output=$("$binary" -v 2>&1 | head -n1 || true)
+    version_output=$("$binary" -v 2>&1 | head -n1)
+    status=$?
+    if [ $status -ne 0 ]; then
+        print_fail "Binary execution failed with status $status. Output: $version_output"
+        return 1
+    fi
     if echo "$version_output" | grep -q "$expected_version"; then
         print_pass "Version check: $version_output"
     else
@@ -64,9 +74,14 @@ test_lua_binary() {
     fi
 
     # Test 3: Execute simple Lua code
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Running simple Lua code"
-    result=$("$binary" -e "print('hello')" 2>&1 || true)
+    result=$("$binary" -e "print('hello')" 2>&1)
+    status=$?
+    if [ $status -ne 0 ]; then
+        print_fail "Binary execution failed with status $status. Output: $result"
+        return 1
+    fi
     if [ "$result" = "hello" ]; then
         print_pass "Simple print statement works"
     else
@@ -75,9 +90,14 @@ test_lua_binary() {
     fi
 
     # Test 4: Math operations
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Testing math operations"
-    result=$("$binary" -e "print(2 + 2)" 2>&1 || true)
+    result=$("$binary" -e "print(2 + 2)" 2>&1)
+    status=$?
+    if [ $status -ne 0 ]; then
+        print_fail "Binary execution failed with status $status. Output: $result"
+        return 1
+    fi
     if [ "$result" = "4" ]; then
         print_pass "Math operations work"
     else
@@ -86,9 +106,14 @@ test_lua_binary() {
     fi
 
     # Test 5: String operations
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Testing string operations"
-    result=$("$binary" -e "print(string.upper('test'))" 2>&1 || true)
+    result=$("$binary" -e "print(string.upper('test'))" 2>&1)
+    status=$?
+    if [ $status -ne 0 ]; then
+        print_fail "Binary execution failed with status $status. Output: $result"
+        return 1
+    fi
     if [ "$result" = "TEST" ]; then
         print_pass "String operations work"
     else
@@ -97,9 +122,14 @@ test_lua_binary() {
     fi
 
     # Test 6: Table operations
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Testing table operations"
-    result=$("$binary" -e "t = {1, 2, 3}; print(#t)" 2>&1 || true)
+    result=$("$binary" -e "t = {1, 2, 3}; print(#t)" 2>&1)
+    status=$?
+    if [ $status -ne 0 ]; then
+        print_fail "Binary execution failed with status $status. Output: $result"
+        return 1
+    fi
     if [ "$result" = "3" ]; then
         print_pass "Table operations work"
     else
@@ -109,7 +139,7 @@ test_lua_binary() {
 
     # Test 7: Architecture verification (Linux/macOS only)
     if [ "$platform" != "windows" ] && command -v file &> /dev/null; then
-        ((TESTS_RUN++))
+        ((TESTS_RUN++)) || true
         print_test "Verifying binary architecture"
         file_output=$(file "$binary")
         print_info "File info: $file_output"
@@ -160,6 +190,8 @@ test_luac_binary() {
     local lua_binary=$2
     local expected_version=$3
 
+    echo "🔍 DEBUG: Entering test_luac_binary for $luac_binary"
+
     if [ ! -f "$luac_binary" ]; then
         print_fail "Luac binary not found: $luac_binary"
         return 1
@@ -173,7 +205,7 @@ test_luac_binary() {
     print_info "Testing: $luac_binary"
 
     # Test 1: Binary is executable
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     if [ -x "$luac_binary" ]; then
         print_pass "Luac binary is executable"
     else
@@ -182,7 +214,7 @@ test_luac_binary() {
     fi
 
     # Test 2: Compile and run Lua bytecode
-    ((TESTS_RUN++))
+    ((TESTS_RUN++)) || true
     print_test "Compiling and running Lua bytecode"
 
     # Create temporary directory for test files
@@ -193,17 +225,24 @@ test_luac_binary() {
     echo "print('bytecode test')" > "$temp_dir/test.lua"
 
     # Compile it
-    if "$luac_binary" -o "$temp_dir/test.luac" "$temp_dir/test.lua" 2>&1; then
-        # Run the compiled bytecode
-        result=$("$lua_binary" "$temp_dir/test.luac" 2>&1 || true)
-        if [ "$result" = "bytecode test" ]; then
-            print_pass "Bytecode compilation and execution works"
-        else
-            print_fail "Bytecode execution failed. Output: $result"
-            return 1
-        fi
+    compile_output=$("$luac_binary" -o "$temp_dir/test.luac" "$temp_dir/test.lua" 2>&1)
+    compile_status=$?
+    if [ $compile_status -ne 0 ]; then
+        print_fail "Bytecode compilation failed with status $compile_status. Output: $compile_output"
+        return 1
+    fi
+
+    # Run the compiled bytecode
+    result=$("$lua_binary" "$temp_dir/test.luac" 2>&1)
+    exec_status=$?
+    if [ $exec_status -ne 0 ]; then
+        print_fail "Bytecode execution failed with status $exec_status. Output: $result"
+        return 1
+    fi
+    if [ "$result" = "bytecode test" ]; then
+        print_pass "Bytecode compilation and execution works"
     else
-        print_fail "Bytecode compilation failed"
+        print_fail "Bytecode execution output mismatch. Expected: 'bytecode test', Got: '$result'"
         return 1
     fi
 

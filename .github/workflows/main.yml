@@ -37,6 +37,8 @@ jobs:
           sudo apt-fast install -y make musl musl-tools upx-ucl
       - name: build Linux binaries
         run: make linux-${{ matrix.arch }}
+      - name: debug - list built binaries
+        run: ls -lah build/linux-${{ matrix.arch }}/
       - name: test Linux binaries
         run: ./test.sh
       - name: compress and checksum
@@ -64,9 +66,11 @@ jobs:
       - name: install compiler and dependencies
         run: |
           sudo apt-fast update
-          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine64
+          sudo apt-fast install -y make upx-ucl gcc-mingw-w64 wine
       - name: build Windows binaries
         run: make windows
+      - name: debug - list built binaries
+        run: ls -lah build/win64/
       - name: test Windows binaries
         run: ./test.sh
       - name: compress and checksum
@@ -98,6 +102,8 @@ jobs:
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: build macOS binaries
         run: make macos-${{ matrix.arch }}
+      - name: debug - list built binaries
+        run: ls -lah build/macos-${{ matrix.arch }}/
       - name: test macOS binaries
         run: ./test.sh
       - name: compress and checksum
